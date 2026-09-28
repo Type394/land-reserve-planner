@@ -42,7 +42,49 @@ from phase3_model import (
 )
 from meeting_packet import build_packet_md
 
-st.set_page_config(page_title="Land Reserve Planner", layout="wide")
+st.set_page_config(
+    page_title="Land Reserve Planner",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# Night mode (dark UI)
+st.markdown(
+    """
+    <style>
+      :root, [data-testid="stAppViewContainer"], .stApp {
+        color-scheme: dark;
+      }
+      .stApp, [data-testid="stAppViewContainer"] {
+        background-color: #0e1117;
+        color: #e6e6e6;
+      }
+      [data-testid="stHeader"] {
+        background: rgba(14,17,23,0.85);
+      }
+      [data-testid="stSidebar"] {
+        background-color: #161b22;
+      }
+      h1, h2, h3, h4, .stMarkdown, label, p {
+        color: #e6e6e6 !important;
+      }
+      div[data-testid="stMetricValue"] {
+        color: #f0f0f0 !important;
+      }
+      .stButton > button {
+        background-color: #21262d;
+        color: #e6e6e6;
+        border: 1px solid #30363d;
+      }
+      .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] > div {
+        background-color: #0e1117 !important;
+        color: #e6e6e6 !important;
+      }
+    </style>
+    """
+    ,
+    unsafe_allow_html=True,
+)
 
 
 def _expected_password() -> str:
@@ -65,14 +107,14 @@ def require_family_password() -> None:
     if not expected:
         st.error(
             "Password not configured. In Streamlit Cloud go to "
-            "App settings → Secrets and add:\n\n"
+            "App settings - Secrets and add: "
             'LAND_PLANNER_PASSWORD = "your-family-password"'
         )
         st.stop()
     if st.session_state.get("family_authed"):
         return
     st.markdown("### Land reserve planner")
-    st.caption("Family access — enter the shared password.")
+    st.caption("Family access - enter the shared password.")
     with st.form("family_gate"):
         entered = st.text_input("Password", type="password")
         submitted = st.form_submit_button("Enter")
@@ -85,7 +127,6 @@ def require_family_password() -> None:
 
 
 require_family_password()
-
 
 def starting_sleeve(keep_brk_flag: bool, distribute_amt: float) -> Sleeve:
     s = full_book_sleeve()
