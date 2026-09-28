@@ -45,6 +45,48 @@ from meeting_packet import build_packet_md
 st.set_page_config(page_title="Land Reserve Planner", layout="wide")
 
 
+def _expected_password() -> str:
+    """Family shared password from Streamlit secrets or env (never hardcode)."""
+    try:
+        secrets = st.secrets
+        if "LAND_PLANNER_PASSWORD" in secrets:
+            return str(secrets["LAND_PLANNER_PASSWORD"])
+        if "passwords" in secrets and "app" in secrets["passwords"]:
+            return str(secrets["passwords"]["app"])
+    except Exception:
+        pass
+    import os
+    return os.environ.get("LAND_PLANNER_PASSWORD", "")
+
+
+def require_family_password() -> None:
+    """Block the app until the shared family password is entered."""
+    expected = _expected_password()
+    if not expected:
+        st.error(
+            "Password not configured. In Streamlit Cloud go to "
+            "App settings → Secrets and add:\n\n"
+            'LAND_PLANNER_PASSWORD = "your-family-password"'
+        )
+        st.stop()
+    if st.session_state.get("family_authed"):
+        return
+    st.markdown("### Land reserve planner")
+    st.caption("Family access — enter the shared password.")
+    with st.form("family_gate"):
+        entered = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Enter")
+    if submitted:
+        if entered == expected:
+            st.session_state["family_authed"] = True
+            st.rerun()
+        st.error("Incorrect password.")
+    st.stop()
+
+
+require_family_password()
+
+
 def starting_sleeve(keep_brk_flag: bool, distribute_amt: float) -> Sleeve:
     s = full_book_sleeve()
     if not keep_brk_flag:
@@ -753,4 +795,3 @@ with tab_exit:
 st.caption(
     f"Non-MUEL ${NON_MUEL_TOTAL:,.0f} · Phase 5 · CapEx + scenarios + inflation presets"
 )
-
