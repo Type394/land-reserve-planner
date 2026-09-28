@@ -147,20 +147,20 @@ def corpus_series(df: pd.DataFrame, name: str) -> pd.Series:
 def burn_from_choice(cost_choice: str, plan: PropertyPlan, custom: float = 433_000.0) -> float:
     if cost_choice.startswith("By property"):
         return active_burn(plan, True, 397_000.0)
-    if cost_choice.startswith("Christopher"):
-        return active_burn(plan, False, 458_000.0)
+    if cost_choice.startswith("IC"):
+        return active_burn(plan, False, 433_000.0)
     return active_burn(plan, False, custom)
 
 
 def default_scenario_seeds() -> Dict[str, dict]:
     return {
-        "Defaults": {
-            "cost_choice": "By property ($397k)",
+        "IC $433k (default)": {
+            "cost_choice": "IC / Christopher ($433k)",
             "return_pct": 5,
             "distribute": 0.0,
             "keep_brk": True,
             "infl": 0.025,
-            "include_capex": True,
+            "include_capex": False,
             "keep_farm": True,
             "keep_ep": True,
             "keep_sm": True,
@@ -168,13 +168,13 @@ def default_scenario_seeds() -> Dict[str, dict]:
             "target_years_a": 30,
             "custom_burn": 433_000.0,
         },
-        "Christopher $458k": {
-            "cost_choice": "Christopher ($458k)",
+        "Cousin compare $397k @ 3%": {
+            "cost_choice": "By property ($397k)",
             "return_pct": 5,
             "distribute": 0.0,
             "keep_brk": True,
-            "infl": 0.025,
-            "include_capex": True,
+            "infl": 0.030,
+            "include_capex": False,
             "keep_farm": True,
             "keep_ep": True,
             "keep_sm": True,
@@ -273,7 +273,7 @@ for k, v in {
     "mc_mu": 0.08, "mc_sigma": 0.17, "mc_paths": 200, "mc_target": 0.90,
     "n_trusts": 9, "snow_rent_mode": "None on record ($0)",
     "keep_farm": True, "keep_ep": True, "keep_sm": True, "snow_rent": 0.0,
-    "include_capex": True, "infl_preset": "IC default 2.5%",
+    "include_capex": False, "infl_preset": "IC default 2.5%",
     "custom_burn": 433_000.0,
 }.items():
     st.session_state.setdefault(k, v)
@@ -287,7 +287,7 @@ c1, c2, c3, c4 = st.columns(4)
 with c1:
     cost_choice = st.radio(
         "Yearly property costs",
-        ["By property ($397k)", "Christopher ($458k)", "Custom / IC ($433k)"],
+        ["IC / Christopher ($433k)", "By property ($397k)", "Custom"],
         index=0,
     )
 with c2:
@@ -304,7 +304,7 @@ c5, c6 = st.columns(2)
 with c5:
     include_capex = st.checkbox(
         "Include upcoming expenses in forecast",
-        value=bool(st.session_state.get("include_capex", True)),
+        value=bool(st.session_state.get("include_capex", False)),
         help="Adds likelihood-weighted CapEx from Properties → Upcoming into the engine.",
     )
     st.session_state["include_capex"] = include_capex
@@ -338,8 +338,8 @@ plan = PropertyPlan(
 custom_burn = float(st.session_state.get("custom_burn", 433_000.0))
 if cost_choice.startswith("By property"):
     burn = active_burn(plan, True, 397_000.0)
-elif cost_choice.startswith("Christopher"):
-    burn = active_burn(plan, False, 458_000.0)
+elif cost_choice.startswith("IC"):
+    burn = active_burn(plan, False, 433_000.0)
 else:
     custom_burn = float(st.number_input(
         "Custom yearly costs ($)", 200_000, 600_000, int(custom_burn), 1_000
@@ -669,8 +669,8 @@ with tab_prop:
     st.header("Properties — keep or sell")
     st.write(
         "With **By property** costs, unchecking a property removes its Year-1 cost from the burn. "
-        "Sale proceeds / tax are not yet wired. Christopher’s single $458k figure does not "
-        "cut costs when you uncheck a property."
+        "Sale proceeds / tax are not yet wired. The IC **$433k** single figure (and Custom) does not "
+        "cut costs when you uncheck a property — CapEx is already embedded in that burn."
     )
     p1, p2, p3 = st.columns(3)
     with p1:
@@ -753,3 +753,4 @@ with tab_exit:
 st.caption(
     f"Non-MUEL ${NON_MUEL_TOTAL:,.0f} · Phase 5 · CapEx + scenarios + inflation presets"
 )
+
